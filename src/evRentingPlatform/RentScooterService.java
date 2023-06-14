@@ -1,5 +1,9 @@
 package evRentingPlatform;
 
+import evRentingPlatform.Scooter.ScooterStatus;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
+import java.io.File;
 import java.util.ArrayList;
 
 /**
@@ -12,64 +16,218 @@ public class RentScooterService {
 	private ArrayList<Scooter> scooterList;
 	private ArrayList<Repairman> repairmanList;
 	private ArrayList<ChargingStation> chargingStationList;
+	private Repairman rpOperator = null;
+	private User userOperator = null;//make sure always decouple after used, whether normally or abnormally ends
+	/**
+	 * @return the userOperator
+	 */
+	public User getUserOperator() {
+		return userOperator;
+	}
+	/**
+	 * @param userOperator the userOperator to set
+	 */
+	public void setUserOperator(User userOperator) {
+		this.userOperator = userOperator;
+	}
 	
 	/**
 	 * Automatically loads in users, scooters, repairmen and charging stations 
 	 */
 	public RentScooterService() {
-		this.initiateUser();
-		this.initiateScooter();
-		this.initiateChargingStation();
-		this.initiateRepairman();
+		// Share use a singleton ObjectMapper to increase efficiency
+		ObjectMapper objectMapper = new ObjectMapper();
+		this.initiateUser(objectMapper);
+		this.initiateScooter(objectMapper);
+		this.initiateChargingStation(objectMapper);
+		this.initiateRepairman(objectMapper);
+		//System.out.println(scooterList.size());
 	}
 	/**
-	 * Initiate exist users: read external file and create {@Code User} class respectively
+	 * Initiate exist users: read external file and create {@code User} class respectively
+	 * @param SingletonObjectMapper an reusable ObjectMapper instance
+	 * @return {@code true} if successfully executed; otherwise {@code false}.
 	 */
-	private void initiateUser() {
-		
+	private boolean initiateUser(ObjectMapper SingletonObjectMapper) {
+		ObjectMapper objectMapper = SingletonObjectMapper;
+		try {
+            // Read the JSON file
+            File file = new File("resources/user.json");
+            
+            // Map the JSON array to a list of Location objects
+            this.userList = objectMapper.readValue(file, new TypeReference<ArrayList<User>>() {});
+            return true;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
 	}
 	/**
-	 * Initiate exist Scooters read external file and create {@Code Scooter} class respectively
+	 * Initiate exist scooters read external file and create {@code Scooter} class respectively.
+	 * @param SingletonObjectMapper an reusable ObjectMapper instance
+	 * @return {@code true} if successfully executed; otherwise {@code false}.
 	 */
-	private void  initiateScooter() {
-		
+	private boolean  initiateScooter(ObjectMapper SingletonObjectMapper) {
+		ObjectMapper objectMapper = SingletonObjectMapper;
+		try {
+            // Read the JSON file
+			File file = new File("resources/scooter_detail.json");
+            
+            // Map the JSON array to a list of Location objects
+            this.scooterList = objectMapper.readValue(file, new TypeReference<ArrayList<Scooter>>() {});
+//            for (Scooter scooter : scooterList) {
+//                System.out.println("No: " + scooter.getNo());
+//   	          System.out.println("Power: " + scooter.getPower());	                
+//                System.out.println("Latitude: " + scooter.getLat());
+//                System.out.println("Longitude: " + scooter.getLng());
+//                System.out.println();
+//            }        
+            return true;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
 	}
 	/**
 	 * Initiate repairmans
+	 * @param SingletonObjectMapper an reusable ObjectMapper instance	
+	 * @return {@code true} if successfully executed; otherwise {@code false}.
 	 */
-	private void  initiateRepairman() {
-		
+	private boolean  initiateRepairman(ObjectMapper SingletonObjectMapper) {
+		ObjectMapper objectMapper = SingletonObjectMapper;
+		try {
+            // Read the JSON file
+            File file = new File("resources/repairman.json");
+            
+            // Map the JSON array to a list of Location objects
+            this.repairmanList = objectMapper.readValue(file, new TypeReference<ArrayList<Repairman>>() {});
+            return true;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
 	}
 	/**
-	 * Initiate ChargingStations, read external file and create {@Code ChargingStation} class respectively
+	 * Initiate ChargingStations, read external file and create {@code ChargingStation} class respectively
+	 * @param SingletonObjectMapper an reusable ObjectMapper instance
+	 * @return 
 	 */
-	private void  initiateChargingStation() {
-		
+	private boolean  initiateChargingStation(ObjectMapper SingletonObjectMapper) {
+		ObjectMapper objectMapper = SingletonObjectMapper;
+		try {
+            // Read the JSON file
+            File file = new File("resources/battery.json");
+            
+            // Map the JSON array to a list of Location objects
+            this.chargingStationList = objectMapper.readValue(file, new TypeReference<ArrayList<ChargingStation>>() {});
+            return true;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
 	}
+	/**
+	 * input user's account and password, if valid, the user will be stored as operator
+	 * @param account the account
+	 * @param password the password
+	 * @return {@code true} if successfully executed; otherwise {@code false}.
+	 */
+	public boolean userLogIn(String account, String password) {
+		try {
+			for(User user: userList){
+				if(account.equals(user.getAccount()) && password.equals(user.getPassword())) {
+					this.userOperator = user;
+					this.userOperator.setInitialPosition();
+					//System.out.println("Welcome User: " + userOperator.getAccount());
+					return true;
+				}
+			}
+			return false;
+		}catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+	}
+	/**
+	 * input repairman's account and password, if valid, the repairman will be stored as UserOperator
+	 * @param account the account
+	 * @param password the password
+	 * @return {@code true} if successfully executed; otherwise {@code false}.
+	 */
+	public boolean repairmanLogIn(String account, String password) {
+		try {
+			for(Repairman repairman: repairmanList){
+				if(account.equals(repairman.getAccount()) && password.equals(repairman.getPassword())) {
+					this.rpOperator = repairman;
+					//System.out.println("Welcome Repairman: " + rpOperator.getAccount());
+					return true;
+				}
+			}
+			return false;
+		}catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+	}
+
 	/**
 	 * Return user's position for GUI display
+	 * use {@code Position.lat} and {@code Position.lng} to get latitude and longitude respectively
 	 * @param user user who requires it's geography position
 	 * @return user's position
 	 */
 	public Position showUserPosition(User user) {
-		return null;
+		return user.getPosition();
 	}
 	/**
 	 * serach available scooter in given range from user's current position
 	 * @param position the user's current position
-	 * @param range range of searching distance in Kilometer
+	 * @param diameter diameter of searching circle in Kilometer
 	 * @return the list of scooters which are available in given range
 	 */
-	public ArrayList<Scooter> searchScooter(Position position, double range){
-		return null;
+	public ArrayList<Scooter> searchScooter(Position position, double diameter){
+		try {
+			double radius = diameter * 0.005;
+			Double[] latLimit = {(position.lat - radius),(position.lat + radius)};
+			Double[] lngLimit = {(position.lng - radius),(position.lng + radius)};
+			ArrayList<Scooter> scooterWithinRange = new ArrayList<Scooter>(10);
+			for(Scooter scooter: scooterList) {
+				if(scooter.getLat() < latLimit[1] && scooter.getLat() > latLimit[0] &&
+				   scooter.getLng() < lngLimit[1] && scooter.getLng() > lngLimit[0]) {
+					if(scooter.getStatus() == Scooter.ScooterStatus.IDLE)
+						scooterWithinRange.add(scooter);
+				}
+			}
+			return scooterWithinRange;
+		}catch(Exception e) {
+			e.printStackTrace();
+			return new ArrayList<Scooter>(0);
+		}
 	}
 	/**
-	 * store Scooter inside user to represent the action of renting a scooter
+	 * start renting the scooter, will trigger following actions:
+	 * (1) store {@code Scooter} inside {@code User} to represent the action of renting a scooter, 
+	 * (2) update user's position to scooter's position
+	 * (3) Switch scooter's status to occupied
+	 * (4) new a {@code RentHistory} to user
 	 * @param user user who rents the scooter
 	 * @param scooter the scooter been rent
 	 * @return
 	 */
 	public boolean rentScooter(User user, Scooter scooter) {
+		try {
+			user.setScooter(scooter);
+			user.setPosition(scooter.getPosition());
+			scooter.setStatus(ScooterStatus.Occupied);
+			user.newRentHistory();
+			return true;
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
 		return false;
 	}
 	/**

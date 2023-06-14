@@ -6,10 +6,9 @@ package evRentingPlatform;
  *
  */
 public class Repairman extends Person {
-	
+	public Repairman() {};
 	public Repairman(String account, String password) {
 		super(account, password);
-		
 	}
 
 

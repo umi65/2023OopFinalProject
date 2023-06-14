@@ -4,7 +4,7 @@ package evRentingPlatform;
  * @author linchia-ho
  *
  */
-public abstract class Person {
+public abstract class Person extends ObjetWithPositon{
 	/**
 	 * the account
 	 */
@@ -13,6 +13,8 @@ public abstract class Person {
 	 * the password
 	 */
 	private String password;
+	
+	public Person() {};
 	
 	public Person(String account, String password) {
 		this.account = account;

@@ -4,32 +4,45 @@ package evRentingPlatform;
  * @author linchia-ho
  *
  */
-public class ChargingStation {
+public class ChargingStation extends ObjetWithPositon{
 	/**
 	 * the series number of the charging station; read from given .json file
 	 */
 	private int no;
 	/**
-	 * the position of the charging station; read from given .json file
+	 * empty constructor which position is set to {-1000.0, -1000.0}, no is set to 0
 	 */
-	private Position position;
-	
+	public ChargingStation() {}	
 	/**
-	 * 
+	 * constructor with no, latitude and longitude
 	 * @param no the series number
 	 * @param lat the latitude of the position
 	 * @param lng the longitude of the postition
 	 */
 	public ChargingStation(int no, double lat, double lng) {
+		super(lat, lng);
 		this.no = no;
-		this.position.lat = lat;
-		this.position.lng = lng;
 	}
 	/**
-	 * return a copy of it's position
-	 * @return position
+	 * constructor with no and {@code Position} type
+	 * @param no
+	 * @param position
 	 */
-	public Position getPosition() {
-		return new Position(this.position.getLat(), this.position.getLng());
+	public ChargingStation(int no, Position position) {
+		super(position.lat, position.lng);
+		this.no = no;
 	}
+	/**
+	 * @return the no
+	 */
+	public int getNo() {
+		return no;
+	}
+	/**
+	 * @param no the no to set
+	 */
+	public void setNo(int no) {
+		this.no = no;
+	}
+	
 }
