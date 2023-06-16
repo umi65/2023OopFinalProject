@@ -116,5 +116,16 @@ public class Scooter extends ObjetWithPositon{
 	public void setPower(int power) {
 		this.power = power;
 	}
-	
+	/**
+	 * consume battery by 1%
+	 * @param distance in kilometer
+	 */
+	public void consumePower(double distance) {
+		try {
+			this.power -= (int)Math.round(distance);
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
+		
+	}
 }

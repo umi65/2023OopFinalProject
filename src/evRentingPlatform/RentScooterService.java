@@ -4,7 +4,10 @@ import evRentingPlatform.Scooter.ScooterStatus;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import java.io.File;
+import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Random;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * the instance of the scooter renting service and contains interactive actions
@@ -18,6 +21,8 @@ public class RentScooterService {
 	private ArrayList<ChargingStation> chargingStationList;
 	private Repairman rpOperator = null;
 	private User userOperator = null;//make sure always decouple after used, whether normally or abnormally ends
+	private RideScooterThread rideScooterThread;
+	private CountDownLatch latch;
 	/**
 	 * @return the userOperator
 	 */
@@ -153,6 +158,19 @@ public class RentScooterService {
         }
 	}
 	/**
+	 * Log out current user
+	 * @return {@code true} if successfully executed; otherwise {@code false}.
+	 */
+	public boolean userLogOut() {
+		try {
+			this.userOperator = null;
+			return true;
+		}catch(Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+	/**
 	 * input repairman's account and password, if valid, the repairman will be stored as UserOperator
 	 * @param account the account
 	 * @param password the password
@@ -173,7 +191,19 @@ public class RentScooterService {
             return false;
         }
 	}
-
+	/**
+	 * Log out current repairman
+	 * @return {@code true} if successfully executed; otherwise {@code false}.
+	 */
+	public boolean repairmanLogOut() {
+		try {
+			this.rpOperator = null;
+			return true;
+		}catch(Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
 	/**
 	 * Return user's position for GUI display
 	 * use {@code Position.lat} and {@code Position.lng} to get latitude and longitude respectively
@@ -185,15 +215,15 @@ public class RentScooterService {
 	}
 	/**
 	 * serach available scooter in given range from user's current position
-	 * @param position the user's current position
+	 * @param user who executes searching
 	 * @param diameter diameter of searching circle in Kilometer
-	 * @return the list of scooters which are available in given range
+	 * @return the list of scooters which are available in given range; if no suitable scooter is found then null
 	 */
-	public ArrayList<Scooter> searchScooter(Position position, double diameter){
+	public ArrayList<Scooter> searchScooter(User user, double diameter){
 		try {
 			double radius = diameter * 0.005;
-			Double[] latLimit = {(position.lat - radius),(position.lat + radius)};
-			Double[] lngLimit = {(position.lng - radius),(position.lng + radius)};
+			Double[] latLimit = {(user.getPosition().lat - radius),(user.getPosition().lat + radius)};
+			Double[] lngLimit = {(user.getPosition().lng - radius),(user.getPosition().lng + radius)};
 			ArrayList<Scooter> scooterWithinRange = new ArrayList<Scooter>(10);
 			for(Scooter scooter: scooterList) {
 				if(scooter.getLat() < latLimit[1] && scooter.getLat() > latLimit[0] &&
@@ -205,7 +235,7 @@ public class RentScooterService {
 			return scooterWithinRange;
 		}catch(Exception e) {
 			e.printStackTrace();
-			return new ArrayList<Scooter>(0);
+			return null;
 		}
 	}
 	/**
@@ -223,7 +253,7 @@ public class RentScooterService {
 			user.setScooter(scooter);
 			user.setPosition(scooter.getPosition());
 			scooter.setStatus(ScooterStatus.Occupied);
-			user.newRentHistory();
+			user.newRentEvent();
 			return true;
 		}catch(Exception e) {
 			e.printStackTrace();
@@ -236,7 +266,15 @@ public class RentScooterService {
 	 * @return {@code true} if successfully executed; otherwise {@code false}
 	 */
 	public boolean rideScooter(User user) {
-		return false;
+        try {
+        	this.latch = new CountDownLatch(1);
+    		rideScooterThread = new RideScooterThread(user, latch);
+    		rideScooterThread.start();
+    		return true;
+        }catch(Exception e) {
+        	e.printStackTrace();
+        	return false;
+        }
 	}
 	/**
 	 * temporarily stop updating position and recording rentHistory 
@@ -244,24 +282,66 @@ public class RentScooterService {
 	 * @return {@code true} if successfully executed; otherwise {@code false}
 	 */
 	public boolean stopRidingScooter(User user) {
-		return false;
+		try {
+			this.rideScooterThread.stopUpdating(); // Stop the distance update thread
+			try {
+	            this.latch.await(); // Wait until the distance update is complete
+	            return true;
+	        } catch (InterruptedException e) {
+	            e.printStackTrace();
+	            return false;
+	        }
+        }catch(Exception e) {
+        	e.printStackTrace();
+        	return false;
+        }
 	}
 	/**
 	 * search charging stations within default distance from the user's current position
 	 * @param position current user position
-	 * @return the list of ChargingStation within default distance
+	 * @return the list of ChargingStation within default distance; if no suitable charging station is found then null
 	 */
-	public ArrayList<ChargingStation> searchChargingStation(Position position){
-		return null;
+	public ArrayList<ChargingStation> searchChargingStation(User user){
+		try {
+			double radius = 0.025;// default 5 Km diameter
+			Double[] latLimit = {(user.getPosition().lat - radius),(user.getPosition().lat + radius)};
+			Double[] lngLimit = {(user.getPosition().lng - radius),(user.getPosition().lng + radius)};
+			ArrayList<ChargingStation> stationWithinRange = new ArrayList<ChargingStation>(10);
+			for(ChargingStation station: chargingStationList) {
+				if(station.getLat() < latLimit[1] && station.getLat() > latLimit[0] &&
+				   station.getLng() < lngLimit[1] && station.getLng() > lngLimit[0]) {
+					stationWithinRange.add(station);
+				}
+			}
+			return stationWithinRange;
+		}catch(Exception e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 	/**
 	 * move to the selected charging station, if the remain battery is not enough, this action will not be executed
+	 * The transfer efficiency is set at 1Km-to-1% of battery
 	 * @param user target user
 	 * @param chargingStation target charging station
 	 * @return {@code true} if successfully executed; otherwise {@code false}
 	 */
 	public boolean moveToChargingStation(User user, ChargingStation chargingStation) {
-		return false;
+		try {
+			double distance = Position.calculateDistance(user.getPosition(), chargingStation.getPosition());
+			System.out.println("Distance from Scooter rider to Charging station is: " + distance);
+			System.out.println("Remaining battery is: " + user.getScooter().getPower() + "%");
+			if(user.getScooter().getPower() > distance) {
+				user.setPosition(chargingStation.getPosition());
+				//user.getScooter().setPosition(chargingStation.getPosition());
+				user.getRentEvent().updatePositionHistory(chargingStation.getPosition());
+				return true;
+			}
+			return false;
+		}catch(Exception e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
 	/**
 	 * rewrite scooter's battery to 100
@@ -269,7 +349,13 @@ public class RentScooterService {
 	 * @return {@code true} if successfully executed; otherwise {@code false}
 	 */
 	public boolean chargeScooter(User user){
-		return false;
+		try {
+			user.getScooter().setPower(100);
+			return true;
+		}catch(Exception e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
 	/**
 	 * terminate a ride, the position will stop updating and rentHistory will no longer be record
@@ -277,23 +363,50 @@ public class RentScooterService {
 	 * @return {@code true} if successfully executed; otherwise {@code false}
 	 */
 	public boolean endRidingScooter(User user) {
-		return false;
+		try {
+			this.rideScooterThread.stopUpdating(); // Stop the distance update thread
+			try {
+	            this.latch.await(); // Wait until the distance update is complete
+	        } catch (InterruptedException e) {
+	            e.printStackTrace();
+	            return false;
+	        }
+			user.getRentEvent().setRentEndTime(LocalTime.now());
+			user.getRentEvent().calculateTotalTime();
+			user.getRentEvent().CalculateDistance();
+			return true;
+        }catch(Exception e) {
+        	e.printStackTrace();
+        	return false;
+        }
 	}
 	/**
 	 * return display Position and distance for GUI display
 	 * @param user target user
-	 * @return [latitude, longitude, distance]
+	 * @return [latitude, longitude, distance]; if fail, then return {@code null}
 	 */
 	public double[] displayPositionAndDistance(User user) {
-		return null;
+		try {
+			double[] result = {user.getLat(), user.getLng(), user.getRentEvent().getDistance()};
+			return result;
+		}catch(Exception e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 	/**
 	 * return the fee of the current ride for GUI display
 	 * @param user target
-	 * @return the value of fee
+	 * @return the value of fee; otherwise returns -1.0
 	 */
 	public double displayFee(User user) {
-		return 0.0;
+		try {
+			//user.getRentEvent().calculateRentFee();
+			return user.getRentEvent().getRentFee();
+		}catch(Exception e) {
+			e.printStackTrace();
+			return -1.0;
+		}
 	}
 	/**
 	 * execute payment and decouple the scooter from the user
@@ -302,24 +415,49 @@ public class RentScooterService {
 	 * @return {@code true} if successfully executed; otherwise {@code false}
 	 */
 	public boolean payFeeAndReturnScooter(User user, boolean withCoupon) {
-		return false;
+		try {
+			user.getRentHistory().add(user.getRentEvent());
+			user.clearRentEvent();
+			user.setScooter(null);
+			return true;
+		}catch(Exception e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
 	/**
 	 * search for malfunction scooters
 	 * @param repairman repairman who execute searching
-	 * @return the list of all malfunction scooters
+	 * @return the list of all malfunction scooters; otherwise {@code null}
 	 */
 	public ArrayList<Scooter> searchMalfunctionScooter(Repairman repairman){
-		return null;
+		try {
+			ArrayList<Scooter> brokenScooter = new ArrayList<Scooter>(10);
+			for(Scooter scooter: scooterList) {
+				if(ScooterStatus.Malfunction == scooter.getStatus()) {
+					brokenScooter.add(scooter);
+				}
+			}
+			return brokenScooter;
+		}catch(Exception e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 	/**
 	 * fixes a scooter, will switch the status of a scooter from {@code Malfunction} to {@code IDLE}.
-	 * @param repairmanm repairman who execute the fixing
+	 * @param repairman repairman who execute the fixing
 	 * @param scooter the scooter to be fixed
 	 * @return {@code true} if successfully executed; otherwise {@code false}
 	 */
-	public boolean fixScooter(Repairman repairmanm, Scooter scooter) {
-		return false;	
+	public boolean fixScooter(Repairman repairman, Scooter scooter) {
+		try {
+			scooter.setStatus(ScooterStatus.IDLE);
+			return true;	
+		}catch(Exception e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
 	/**
 	 * charge a scooter. Then relocate the scooter to a different position
@@ -327,7 +465,19 @@ public class RentScooterService {
 	 * @return
 	 */
 	public boolean chargeLowBatteryScooter(Repairman repairman, Scooter scooter) {
-		return false;
+		try {
+			scooter.setPower(100);
+			double[] latRange = {25.026708,25.068277};
+		    double[] lngRange = {121.511162, 121.567045};
+		    Random random = new Random();
+		    double randomLat = latRange[0] + random.nextDouble() * (latRange[1] - latRange[0]);
+		    double randomLng= lngRange[0] + random.nextDouble() * (lngRange[1] - lngRange[0]);
+			scooter.setPosition(randomLat, randomLng);
+			return true;
+		}catch(Exception e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
 	
 	}

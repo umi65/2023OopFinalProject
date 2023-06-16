@@ -1,6 +1,7 @@
 package evRentingPlatform;
 
 import java.time.*;
+import java.util.ArrayList;
 /**
  * the data structure of the renting history
  * @author linchia-ho
@@ -15,14 +16,18 @@ public class RentHistory {
 	 * the rent fee
 	 */
 	private double rentFee;
+//	/**
+//	 * the position when renting happens, can only be set by constructor
+//	 */
+//	private Position startPosition;
+//	/**
+//	 * the position when renting ends
+//	 */
+//	private Position endPosition;
 	/**
-	 * the position when renting happens, can only be set by constructor
+	 * Record of position, should be updated whenever the position is updated
 	 */
-	private Position startPosition;
-	/**
-	 * the position when renting ends
-	 */
-	private Position endPosition;
+	private ArrayList<Position> positionHistory = new ArrayList<Position>(10);
 	/**
 	 * the accumulate distance 
 	 */
@@ -46,7 +51,7 @@ public class RentHistory {
 	/**
 	 * whether this transaction receive discount from valid coupon
 	 */
-	private boolean withCoupon;
+	private boolean withCoupon = false;
 	/**
 	 * the serial number of the scooter
 	 */
@@ -55,7 +60,7 @@ public class RentHistory {
 	//public RentHistory() {};
 	public RentHistory(Position startPosition, String scooterNo) {
 		this.date = LocalDate.now();
-		this.startPosition = new Position(startPosition);
+		this.positionHistory.add(new Position(startPosition));
 		this.rentStartTime = LocalTime.now();
 		this.scooterNo = scooterNo;
 	}	
@@ -72,34 +77,43 @@ public class RentHistory {
 		return date;
 	}
 	/**
-	 * @return the rentFee
+	 * auotmatically calculate the rent fee and returns the fee
+	 * @return the rent fee
 	 */
 	public double getRentFee() {
+		this.calculateRentFee();
 		return rentFee;
 	}
 	/**
-	 * @param rentFee the rentFee to set
+	 * calculate the rent fee by 2.5NTD per kilometer, get 10% off with coupon
 	 */
-	public void setRentFee(double rentFee) {
-		this.rentFee = rentFee;
+	public void calculateRentFee() {
+		try {
+			this.rentFee = distance * 2.5;
+			if(withCoupon) {
+				this.rentFee *= 0.9;
+			}
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
 	}
 	/**
-	 * @param startPosition the startPosition to set
+	 * to get the position history
+	 * @return a copy of position history
 	 */
-	public void setStartPosition(Position startPosition) {
-		this.startPosition = startPosition;
+	public ArrayList<Position> getPositionHistory(){
+		ArrayList<Position> copyPositionHistory = new ArrayList<Position>(this.positionHistory.size());
+		for(Position copyPosition: this.positionHistory) {
+			copyPositionHistory.add(copyPosition);
+		}
+		return copyPositionHistory ;
 	}
 	/**
-	 * @return the endPosition
+	 * add a new position to the position history
+	 * @param newPosition the updated new position
 	 */
-	public Position getEndPosition() {
-		return endPosition;
-	}
-	/**
-	 * @param endPosition the endPosition to set
-	 */
-	public void setEndPosition(Position endPosition) {
-		this.endPosition = endPosition;
+	public void updatePositionHistory(Position newPosition) {
+		this.positionHistory.add(newPosition);
 	}
 	/**
 	 * @return the distance
@@ -108,10 +122,22 @@ public class RentHistory {
 		return distance;
 	}
 	/**
-	 * @param distance the distance to set
+	 * calculate the accumulative distance from the position history
 	 */
-	public void setDistance(double distance) {
-		this.distance = distance;
+	public void CalculateDistance() {
+		try {
+			double accumulativeDistance = 0;
+			Position previousPosition = null;
+			for(Position recordedPosition: positionHistory) {
+				if(null == previousPosition) {
+					previousPosition = recordedPosition;
+				}
+				accumulativeDistance += Position.calculateDistance(previousPosition, recordedPosition);
+			}
+			this.distance = accumulativeDistance;
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
 	}
 	/**
 	 * @return the rentStartTime
@@ -139,10 +165,14 @@ public class RentHistory {
 		return totalTime;
 	}
 	/**
-	 * @param totalTime the totalTime to set
+	 * calculate the Total time from the start time and end time
 	 */
-	public void setTotalTime(Duration totalTime) {
-		this.totalTime = totalTime;
+	public void calculateTotalTime() {
+		try {
+			this.totalTime = Duration.between(rentStartTime, rentEndTime);
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
 	}
 	/**
 	 * @return the chargeTimes
@@ -151,10 +181,10 @@ public class RentHistory {
 		return chargeTimes;
 	}
 	/**
-	 * @param chargeTimes the chargeTimes to set
+	 * increase the charge record by one
 	 */
-	public void setChargeTimes(int chargeTimes) {
-		this.chargeTimes = chargeTimes;
+	public void addChargeTimes() {
+		this.chargeTimes += 1;
 	}
 	/**
 	 * @return the withCoupon

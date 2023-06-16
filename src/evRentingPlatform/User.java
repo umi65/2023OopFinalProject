@@ -15,9 +15,10 @@ public class User extends Person{
 	private String email = null;
 	private String userName = null;
 	private String creditCard = null;
-	private ArrayList<RentHistory> rentHistory = new ArrayList<RentHistory>(10);	
+	private ArrayList<RentHistory> rentHistory = new ArrayList<RentHistory>(5);
+	private RentHistory rentEvent;
 	private Scooter scooter = null;
-	private ArrayList<Coupon> couponList = new ArrayList<Coupon>(5);
+	private ArrayList<Coupon> couponList = new ArrayList<Coupon>(5);	
 	/**
 	 * empty constructor
 	 */
@@ -31,7 +32,7 @@ public class User extends Person{
 		super(account, password);
 	}
 	/**
-	 * generates random initial position
+	 * generates random initial position, are called when user login
 	 */
 	public void setInitialPosition() {
 		double[] latRange = {25.026708,25.068277};
@@ -41,7 +42,6 @@ public class User extends Person{
 	    double randomLng= lngRange[0] + random.nextDouble() * (lngRange[1] - lngRange[0]);
 		this.setPosition(randomLat, randomLng);
 	}
-	
 	/**
 	 * @return the rentHistory
 	 */
@@ -51,16 +51,32 @@ public class User extends Person{
 	/**
 	 * generate and add a new rent history to user's list of rent history
 	 */
-	public void newRentHistory() {
+	public void newRentEvent() {
 		try {
-			RentHistory newRentHistory = new RentHistory(this.getPosition(),this.scooter.getNo());
-			this.rentHistory.add(newRentHistory);
+			if(this.rentEvent == null) {
+				this.rentEvent = new RentHistory(this.getPosition(),this.scooter.getNo());
+			}else {
+				throw new Exception("Last rent event is unclosed");
+			}
 		}catch(Exception e){
 			e.printStackTrace();
 		}
 	}
 	/**
-	 * @return the scooter
+	 * get the instance of rent event
+	 * @return
+	 */
+	public RentHistory getRentEvent() {
+		return this.rentEvent;
+	}
+	/**
+	 * clear the feild of rent event, should be executed after it is add to the rent history
+	 */
+	public void clearRentEvent() {
+		this.rentEvent = null;
+	}
+	/**
+	 * @return the scooter 
 	 */
 	public Scooter getScooter() {
 		return scooter;
@@ -132,11 +148,11 @@ public class User extends Person{
 	public String getCreditCard() {
 		return creditCard;
 	}
-
 	/**
 	 * @param creditCard the creditCard to set
 	 */
 	public void setCreditCard(String creditCard) {
 		this.creditCard = creditCard;
-	}	
+	}
+	
 }
