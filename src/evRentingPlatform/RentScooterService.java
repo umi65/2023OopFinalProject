@@ -10,30 +10,48 @@ import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 
 /**
- * the instance of the scooter renting service and contains interactive actions
+ * the instance of the scooter renting service. Contains interactive actions
  * @author linchia-ho
  *
  */
 public class RentScooterService {
+	/**
+	 * The list of registered users
+	 */
 	private ArrayList<User> userList;
+	/**
+	 * The list of registered scooters
+	 */
 	private ArrayList<Scooter> scooterList;
+	/**
+	 * The list of registered repairmans
+	 */
 	private ArrayList<Repairman> repairmanList;
+	/**
+	 * The list of available charging stations
+	 */
 	private ArrayList<ChargingStation> chargingStationList;
+	/**
+	 * current logined repairman
+	 */
 	private Repairman rpOperator = null;
+	/**
+	 * current logined user
+	 */
 	private User userOperator = null;//make sure always decouple after used, whether normally or abnormally ends
+	/**
+	 * a riding simulation machine
+	 */
 	private RideScooterThread rideScooterThread;
+	/**
+	 * a synchronization aid
+	 */
 	private CountDownLatch latch;
 	/**
 	 * @return the userOperator
 	 */
 	public User getUserOperator() {
 		return userOperator;
-	}
-	/**
-	 * @param userOperator the userOperator to set
-	 */
-	public void setUserOperator(User userOperator) {
-		this.userOperator = userOperator;
 	}
 	
 	/**
@@ -89,7 +107,6 @@ public class RentScooterService {
 //                System.out.println();
 //            }        
             return true;
-
         } catch (Exception e) {
             e.printStackTrace();
             return false;
@@ -169,6 +186,27 @@ public class RentScooterService {
 			e.printStackTrace();
 			return false;
 		}
+	}
+	/**
+	 * register a new user to the service
+	 * @param account the account
+	 * @param password the password
+	 * @return {@code true} if successful and no duplicate account; otherwise {@code false}
+	 */
+	public boolean registerNewUser(String account, String password) {
+		try {
+			for(User user: userList) {
+				if(user.getAccount().equals(account)) {
+					return false;
+				}
+			}
+			User newUser = new User(account, password);
+			this.userList.add(newUser);
+			return true;
+		}catch (Exception e) {
+           e.printStackTrace();
+           return false;
+        }
 	}
 	/**
 	 * input repairman's account and password, if valid, the repairman will be stored as UserOperator
@@ -344,13 +382,14 @@ public class RentScooterService {
 		}
 	}
 	/**
-	 * rewrite scooter's battery to 100
+	 * rewrite scooter's battery to 100 and generate a coupon to the user
 	 * @param user user who execute charging
 	 * @return {@code true} if successfully executed; otherwise {@code false}
 	 */
 	public boolean chargeScooter(User user){
 		try {
 			user.getScooter().setPower(100);
+			user.addToCouponList(new Coupon(user.getRentEvent()));
 			return true;
 		}catch(Exception e) {
 			e.printStackTrace();
@@ -409,21 +448,62 @@ public class RentScooterService {
 		}
 	}
 	/**
-	 * execute payment and decouple the scooter from the user
-	 * @param user target user
-	 * @param withCoupon {@code true} if use coupon for this ride; otherwise {@code false}
-	 * @return {@code true} if successfully executed; otherwise {@code false}
+	 * find for qualified coupon for this payment
+	 * @param user the executer
+	 * @return available coupon for this payment; otherwise {@code null}
 	 */
-	public boolean payFeeAndReturnScooter(User user, boolean withCoupon) {
+	public Coupon findQualifiedCoupon(User user) {
 		try {
+			String eventID = user.getRentEvent().getHistoryID();
+			for(Coupon coupon: user.getCouponList()) {
+				if(eventID != coupon.getHistoryID() && !coupon.getUsedFlag()) {
+					return coupon;
+				}
+			}
+			return null;
+		}catch(Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	/**
+	 * represents properly terminate the renting, execute the following actions:
+	 * (1) calculate the fee with coupon checking
+	 * (2) archived the rent history
+	 * (3) decouple the scooter from the user
+	 * @param user target user
+	 * @param coupon usable coupon
+	 * @return the proper rent fee; otherwise return -1
+	 */
+	public double payFeeAndReturnScooter(User user, Coupon coupon) {
+		try {
+			double fee = this.displayFee(user);
+			if(coupon != null) {
+				String eventID = user.getRentEvent().getHistoryID();
+				if(eventID != coupon.getHistoryID() && !coupon.getUsedFlag()) {
+					coupon.useCoupon();
+					fee *= 0.9;
+				}
+			}
 			user.getRentHistory().add(user.getRentEvent());
 			user.clearRentEvent();
 			user.setScooter(null);
-			return true;
+			return fee;
 		}catch(Exception e) {
 			e.printStackTrace();
-			return false;
+			return -1;
 		}
+	}
+	/**
+	 * represents properly terminate the renting, execute the following actions:
+	 * (1) calculate the fee with no coupon
+	 * (2) archived the rent history
+	 * (3) decouple the scooter from the user
+	 * @param user target user
+	 * @return the proper rent fee; otherwise return -1
+	 */
+	public double payFeeAndReturnScooter(User user) {
+		return this.payFeeAndReturnScooter(user, null);
 	}
 	/**
 	 * search for malfunction scooters
@@ -452,7 +532,8 @@ public class RentScooterService {
 	 */
 	public boolean fixScooter(Repairman repairman, Scooter scooter) {
 		try {
-			scooter.setStatus(ScooterStatus.IDLE);
+			FixScooterThread fixScooterThread = new FixScooterThread(scooter);
+			fixScooterThread.run();
 			return true;	
 		}catch(Exception e) {
 			e.printStackTrace();
@@ -462,7 +543,7 @@ public class RentScooterService {
 	/**
 	 * charge a scooter. Then relocate the scooter to a different position
 	 * @param repairman
-	 * @return
+	 * @return {@code true} if successfully executed; otherwise {@code false}
 	 */
 	public boolean chargeLowBatteryScooter(Repairman repairman, Scooter scooter) {
 		try {

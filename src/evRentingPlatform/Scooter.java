@@ -2,7 +2,7 @@ package evRentingPlatform;
 
 import java.util.Random;
 /**
- * the data structure of a scooter, which contains series number, position, battery, and status
+ * the representation of a scooter, which contains series number, position, battery, and status
  * @author linchia-ho
  * 
  */
@@ -70,7 +70,8 @@ public class Scooter extends ObjetWithPositon{
 		this.power = power;
 	}
 	/**
-	 * 
+	 * determine the initial status of a scooter.
+	 * A scooter has 5% of chance being malfunction
 	 */
 	private static ScooterStatus setRandomInitialStatus() {
 		 Random random = new Random();
@@ -81,43 +82,43 @@ public class Scooter extends ObjetWithPositon{
 		 } 
 	}
 	/**
-	 * @return the no
+	 * @return the no(series number)
 	 */
 	public String getNo() {
 		return no;
 	}
 	/**
-	 * @param no the no to set
+	 * @param no the no(series number) to set
 	 */
 	public void setNo(String no) {
 		this.no = no;
 	}
 	/**
-	 * @return the status
+	 * @return the status of scooter
 	 */
 	public ScooterStatus getStatus() {
 		return status;
 	}
 	/**
-	 * @param status the status to set
+	 * @param status the status of scooter to set
 	 */
 	public void setStatus(ScooterStatus status) {
 		this.status = status;
 	}
 	/**
-	 * @return the power
+	 * @return the battery power
 	 */
 	public int getPower() {
 		return power;
 	}
 	/**
-	 * @param power the power to set
+	 * @param power the battery power to set
 	 */
 	public void setPower(int power) {
 		this.power = power;
 	}
 	/**
-	 * consume battery by 1%
+	 * consume battery by 1% per kilometer
 	 * @param distance in kilometer
 	 */
 	public void consumePower(double distance) {

@@ -1,7 +1,5 @@
 package evRentingPlatform;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -94,10 +92,18 @@ public class User extends Person{
 		return couponList;
 	}
 	/**
-	 * @param couponList the couponList to set
+	 * 
+	 * @param coupon the new coupon
+	 * @return {@code true} if successfully executed; otherwise {@code false}
 	 */
-	public void setCouponList(ArrayList<Coupon> couponList) {
-		this.couponList = couponList;
+	public boolean addToCouponList(Coupon coupon) {
+		try {
+			this.couponList.add(coupon);
+			return true;
+		}catch(Exception e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
 
 	/**

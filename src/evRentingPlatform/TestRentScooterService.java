@@ -55,17 +55,32 @@ public class TestRentScooterService {
         System.out.println("Scooter's status after renting: "+ selectedScooter.getStatus());
         System.out.println();
         
-        // Strat riding scooter
+        // Start riding scooter
+        System.out.println("<<Start physically riding scooter for 15 sec>>");
         service.rideScooter(service.getUserOperator());
         try {
             Thread.sleep(15000); // Sleep for 10 seconds
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        
+        // End riding
         service.endRidingScooter(service.getUserOperator()); // Stop the riding thread
+        System.out.println("<<End physically riding scooter>>");
+       
+        // Display result
         System.out.println("Rent End Time:" + service.getUserOperator().getRentEvent().getRentEndTime());
         System.out.println("Total Time:" + service.getUserOperator().getRentEvent().getTotalTime());
         System.out.println("Final distance: " + service.getUserOperator().getRentEvent().getDistance());
+        
+        // Pay and return
+        System.out.println("The fee of this ride: " + service.displayFee(service.getUserOperator()));
+        System.out.println("Return the scooter and pays the fee of: " + service.payFeeAndReturnScooter(service.getUserOperator()));
+        
+        
+	}
+
+}
 //        boolean rideInProgress = false;
 //        Scanner scanner = new Scanner(System.in);
 //        System.out.print("Start riding scooter? (Y/N): ");
@@ -93,10 +108,3 @@ public class TestRentScooterService {
 //        } else {
 //            System.out.println("Invalid input. Ride ends.");
 //        }
-        System.out.println("The fee of this ride:" + service.displayFee(service.getUserOperator()));
-        System.out.println("Pays fee and return scooter: " + service.payFeeAndReturnScooter(service.getUserOperator(), false));
-        
-        
-	}
-
-}

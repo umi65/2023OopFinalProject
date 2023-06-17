@@ -1,5 +1,9 @@
 package evRentingPlatform;
-
+/**
+ * the data structure composed of latitude and longitude
+ * @author linchia-ho
+ *
+ */
 public class Position {
 	/**
 	 * latitude
@@ -55,9 +59,7 @@ public class Position {
 
         double a = Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2)
                 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(deltaLon / 2) * Math.sin(deltaLon / 2);
-
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
         double distance = 6371 * c; // Earth's radius in kilometers
 
         return distance;

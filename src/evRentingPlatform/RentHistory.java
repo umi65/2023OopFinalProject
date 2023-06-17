@@ -8,6 +8,7 @@ import java.util.ArrayList;
  *
  */
 public class RentHistory {
+
 	/**
 	 * the date, can only be set by constructor
 	 */
@@ -16,14 +17,6 @@ public class RentHistory {
 	 * the rent fee
 	 */
 	private double rentFee;
-//	/**
-//	 * the position when renting happens, can only be set by constructor
-//	 */
-//	private Position startPosition;
-//	/**
-//	 * the position when renting ends
-//	 */
-//	private Position endPosition;
 	/**
 	 * Record of position, should be updated whenever the position is updated
 	 */
@@ -56,20 +49,26 @@ public class RentHistory {
 	 * the serial number of the scooter
 	 */
 	private String scooterNo;
+	private String historyID;
 	
-	//public RentHistory() {};
 	public RentHistory(Position startPosition, String scooterNo) {
 		this.date = LocalDate.now();
 		this.positionHistory.add(new Position(startPosition));
 		this.rentStartTime = LocalTime.now();
 		this.scooterNo = scooterNo;
-	}	
-	/**
-	 * @return the scooterNo
-	 */
-	public String getScooterNo() {
-		return scooterNo;
+		this.historyID = this.date.toString() + this.rentStartTime.toString() + this.scooterNo;
 	}
+	@Override
+	public boolean equals(Object obj) {
+		// TODO Auto-generated method stub
+		return super.equals(obj);
+	}
+	@Override
+	public String toString() {
+		// TODO Auto-generated method stub
+		return super.toString();
+	}
+	
 	/**
 	 * @return the date
 	 */
@@ -198,4 +197,14 @@ public class RentHistory {
 	public void setWithCoupon(boolean withCoupon) {
 		this.withCoupon = withCoupon;
 	}
+	/**
+	 * @return the scooterNo
+	 */
+	public String getScooterNo() {
+		return scooterNo;
+	}
+	public String getHistoryID() {
+		return historyID;
+	}
+
 }
