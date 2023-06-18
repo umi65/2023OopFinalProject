@@ -66,8 +66,8 @@ public class RideScooterThread extends Thread {
                 Thread.sleep(10000); // Sleep for 10 seconds
                 Position nextPosition = generate(user.getLat(),user.getLng());
                 // update position
-                user.setLat(nextPosition.lat);
-                user.setLng(nextPosition.lng);
+                user.setPosition(nextPosition);
+                user.getScooter().setPosition(nextPosition);
                 user.getScooter().consumePower(Position.calculateDistance(user.getPosition(), nextPosition));
                 user.getRentEvent().updatePositionHistory(new Position(nextPosition)); 
                 System.out.println("Update position: " + user.getLat() + ", " + user.getLng());

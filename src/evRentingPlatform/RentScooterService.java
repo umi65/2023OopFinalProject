@@ -483,6 +483,7 @@ public class RentScooterService {
 				if(eventID != coupon.getHistoryID() && !coupon.getUsedFlag()) {
 					coupon.useCoupon();
 					fee *= 0.9;
+					user.getRentEvent().setWithCoupon(true);
 				}
 			}
 			user.getRentHistory().add(user.getRentEvent());

@@ -7,6 +7,7 @@ import java.util.Random;
  * 
  */
 public class Scooter extends ObjetWithPositon{
+
 	/**
 	 * the status of a scooter
 	 * @author linchia-ho
@@ -128,5 +129,12 @@ public class Scooter extends ObjetWithPositon{
 			e.printStackTrace();
 		}
 		
+	}
+	@Override
+	public String toString() {
+		return "Scooter No." + this.no + 
+				"\n<Status: " + this.status + ">" + 
+				"\n<Battery: " + this.power + ">" + 
+				"\n<" + this.getPosition().toString() + ">" ;
 	}
 }

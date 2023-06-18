@@ -5,6 +5,7 @@ package evRentingPlatform;
  *
  */
 public class Position {
+	
 	/**
 	 * latitude
 	 */
@@ -37,6 +38,24 @@ public class Position {
 	public Position() {
 		this.lat = -1000.0;
 		this.lng = -1000.0;
+	}
+	/**
+	 * compares between position
+	 * @param position 
+	 * @return {@code true} if has same latitude and longitude; otherwise {@code false}
+	 */
+	public boolean equals(Position position) {
+		if(this.lat == position.lat && this.lng == position.lng) {
+			return true;
+		}else {
+			return false;
+		}
+	}
+
+	@Override
+	public String toString() {
+		String msg = "Position: latitude: " + this.lat + ", longitude: " + this.lng ;
+		return msg;
 	}
 	/**
 	 * calculate the distance of 2 position in Kilometer

@@ -1,7 +1,9 @@
-package evRentingPlatform;
+package TestingPackage;
 
 import java.util.ArrayList;
 import java.util.Scanner;
+
+import evRentingPlatform.*;
 
 
 public class TestRentScooterService {
@@ -30,21 +32,13 @@ public class TestRentScooterService {
 		ArrayList<Scooter> scooterWithinRange = service.searchScooter(service.getUserOperator(), 0.25);
 		System.out.println("Scooters Within Range: " + scooterWithinRange.size());
 		for(Scooter scooter: scooterWithinRange) {
-			System.out.println("No: " + scooter.getNo());
-            System.out.println("Power: " + scooter.getPower());	                
-            System.out.println("Latitude: " + scooter.getLat());
-            System.out.println("Longitude: " + scooter.getLng());
-            System.out.println("Status: " + scooter.getStatus());
-            System.out.println();
+			System.out.println(scooter.toString());
+			System.out.println();
 		}
 		
 		// Imitate selecting a certain scooter in GUI
 		Scooter selectedScooter = scooterWithinRange.get(scooterWithinRange.size()-1);
-		System.out.println("Selected scooter:");
-		System.out.println("No: " + selectedScooter.getNo());
-        System.out.println("Power: " + selectedScooter.getPower());	                
-        System.out.println("Latitude: " + selectedScooter.getLat());
-        System.out.println("Longitude: " + selectedScooter.getLng());
+		System.out.println("Selected scooter:" + selectedScooter.toString());
         System.out.println();
         
         // Execute renting a scooter
@@ -66,16 +60,17 @@ public class TestRentScooterService {
         
         // End riding
         service.endRidingScooter(service.getUserOperator()); // Stop the riding thread
+        System.out.println();
         System.out.println("<<End physically riding scooter>>");
        
         // Display result
-        System.out.println("Rent End Time:" + service.getUserOperator().getRentEvent().getRentEndTime());
-        System.out.println("Total Time:" + service.getUserOperator().getRentEvent().getTotalTime());
+        System.out.println("Rent End Time: " + service.getUserOperator().getRentEvent().getRentEndTime());
+        System.out.println("Total Time: " + service.getUserOperator().getRentEvent().getTotalTime());
         System.out.println("Final distance: " + service.getUserOperator().getRentEvent().getDistance());
         
         // Pay and return
         System.out.println("The fee of this ride: " + service.displayFee(service.getUserOperator()));
-        System.out.println("Return the scooter and pays the fee of: " + service.payFeeAndReturnScooter(service.getUserOperator()));
+        System.out.println("Return the scooter and pays the fee of NTD " + service.payFeeAndReturnScooter(service.getUserOperator()));
         
         
 	}

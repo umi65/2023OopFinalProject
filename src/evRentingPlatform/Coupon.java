@@ -5,6 +5,7 @@ package evRentingPlatform;
  * Different coupons may have same rent history ID, which means they are both generated during a single rent event
  */
 public class Coupon {
+
 	/**
 	 * the rent history which generates it
 	 */
@@ -45,5 +46,10 @@ public class Coupon {
 	 */
 	public boolean getUsedFlag() {
 		return this.usedFlag;
+	}
+	@Override
+	public String toString() {
+		return "Coupon from" + rentHistoryID + 
+				"\n<Used:" + this.usedFlag + ">";
 	}
 }

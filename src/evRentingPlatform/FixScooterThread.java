@@ -1,12 +1,19 @@
 package evRentingPlatform;
-
+/**
+ * 
+ * @author linchia-ho
+ *
+ */
 public class FixScooterThread extends Thread {
 	
 	/**
 	 * the scooter being examed
 	 */
 	private Scooter scooter;
-	
+	/**
+	 * constructor which receives the target scooter 
+	 * @param scooter
+	 */
 	public FixScooterThread(Scooter scooter) {
 		this.scooter = scooter;
 	}

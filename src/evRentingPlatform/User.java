@@ -9,20 +9,45 @@ import java.util.Random;
  *
  */
 public class User extends Person{
+	/**
+	 * the cell phone number
+	 */
 	private String cellphone = null;
+	/**
+	 * the email address
+	 */
 	private String email = null;
+	/**
+	 * the name of the user
+	 */
 	private String userName = null;
+	/**
+	 * the credit card digit
+	 */
 	private String creditCard = null;
+	/**
+	 * the history of renting record
+	 */
 	private ArrayList<RentHistory> rentHistory = new ArrayList<RentHistory>(5);
+	/**
+	 * the current renting event, exist only during renting
+	 */
 	private RentHistory rentEvent;
+	/**
+	 * the rent scooter, exist only during renting
+	 */
 	private Scooter scooter = null;
+	/**
+	 * the coupon gain by chargine scooters
+	 */
 	private ArrayList<Coupon> couponList = new ArrayList<Coupon>(5);	
+	
 	/**
 	 * empty constructor
 	 */
 	public User() {};
 	/**
-	 * 
+	 * constructor with account and password
 	 * @param account the account
 	 * @param password the password
 	 */
@@ -92,7 +117,7 @@ public class User extends Person{
 		return couponList;
 	}
 	/**
-	 * 
+	 * receive a coupon 
 	 * @param coupon the new coupon
 	 * @return {@code true} if successfully executed; otherwise {@code false}
 	 */
@@ -159,6 +184,24 @@ public class User extends Person{
 	 */
 	public void setCreditCard(String creditCard) {
 		this.creditCard = creditCard;
+	}
+	/**
+	 * a simplified version for display essential information
+	 * @return who and where the use is
+	 */
+	public String simpleToString() {
+		return "User name: " + this.userName +
+				"\n<" + this.getPosition().toString() + ">";
+	}
+	@Override
+	public String toString() {
+		return "User name: " + this.userName + 
+				"\n<Account: "	+ this.getAccount()+
+				"\n<Password: " + this.getPassword()+ ">" +
+				"\n<Cell: " + this.cellphone + ">" +
+				"\n<Email: " + this.email + ">" +
+				"\n<Credit Card: " + this.creditCard + ">" +
+				"\n<" + this.getPosition().toString() + ">";
 	}
 	
 }

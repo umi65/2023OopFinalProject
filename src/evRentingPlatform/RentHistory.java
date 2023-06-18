@@ -8,7 +8,7 @@ import java.util.ArrayList;
  *
  */
 public class RentHistory {
-
+	
 	/**
 	 * the date, can only be set by constructor
 	 */
@@ -58,16 +58,7 @@ public class RentHistory {
 		this.scooterNo = scooterNo;
 		this.historyID = this.date.toString() + this.rentStartTime.toString() + this.scooterNo;
 	}
-	@Override
-	public boolean equals(Object obj) {
-		// TODO Auto-generated method stub
-		return super.equals(obj);
-	}
-	@Override
-	public String toString() {
-		// TODO Auto-generated method stub
-		return super.toString();
-	}
+
 	
 	/**
 	 * @return the date
@@ -203,8 +194,26 @@ public class RentHistory {
 	public String getScooterNo() {
 		return scooterNo;
 	}
+	/**
+	 * 
+	 * @return the history Identifier
+	 */
 	public String getHistoryID() {
 		return historyID;
 	}
-
+	@Override
+	public String toString() {
+		return "Rent History: " + this.historyID + //"\n<" + + ">" + 
+				"\n<Date: " + this.date + ">" + 
+				"\n<Scooter: " + this.scooterNo + ">" + 
+				"\n<Start: " + this.rentStartTime+ ">" +
+				"\n<End: " + this.rentEndTime+ ">" + 
+				"\n<Duration: " + this.totalTime+ ">" + 
+				"\n<Start Position; " + this.positionHistory.get(0)+ ">" + 
+				"\n<End Position: " + this.positionHistory.get(this.positionHistory.size()-1) + ">" + 
+				"\n<Charge Times: " + this.chargeTimes + ">" +
+				"\n<Fee: " + this.rentFee + ">" + 
+				"\n<With coupon: " + this.withCoupon + ">";
+	}
+	
 }
